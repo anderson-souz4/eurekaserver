@@ -15,7 +15,6 @@ import com.agrotis.trainees.crud.dtos.ItemNotaDto;
 import com.agrotis.trainees.crud.entity.CabecalhoNota;
 import com.agrotis.trainees.crud.entity.ItemNota;
 import com.agrotis.trainees.crud.entity.Produto;
-import com.agrotis.trainees.crud.repository.CabecalhoNotaRepository;
 import com.agrotis.trainees.crud.repository.NotaFiscalItemRepository;
 import com.agrotis.trainees.crud.service.CabecalhoNotaService;
 import com.agrotis.trainees.crud.service.ItemNotaService;
@@ -30,14 +29,11 @@ public class ItemNotaServiceImpl implements ItemNotaService {
 
     private final NotaFiscalItemRepository repository;
     private final ProdutoService produtoService;
-    private final CabecalhoNotaRepository cabecalhoNotaRepository;
     private final CabecalhoNotaService cabecalhoNotaService;
 
-    public ItemNotaServiceImpl(NotaFiscalItemRepository repository, ProdutoServiceImpl produtoService,
-                    CabecalhoNotaRepository cabecalhoNotaRepository, CabecalhoNotaService cabecalhoNotaService) {
+    public ItemNotaServiceImpl(NotaFiscalItemRepository repository, ProdutoServiceImpl produtoService, CabecalhoNotaService cabecalhoNotaService) {
         this.repository = repository;
         this.produtoService = produtoService;
-        this.cabecalhoNotaRepository = cabecalhoNotaRepository;
         this.cabecalhoNotaService = cabecalhoNotaService;
     }
 
@@ -45,10 +41,12 @@ public class ItemNotaServiceImpl implements ItemNotaService {
     @Transactional
     public ItemNotaDto salvar(ItemNotaDto dto) {
         ItemNota itemNota = DtoUtils.converteParaEntidade(dto);
-        CabecalhoNota cabecalhoSalvo = salvarOuBuscarCabecalho(itemNota.getCabecalhoNota());
+        CabecalhoNota cabecalhoSalvo = cabecalhoNotaService.salvarOuBuscarCabecalho(itemNota.getCabecalhoNota());
         Produto produtoSalvo = produtoService.salvarOuBuscarProduto(itemNota.getProduto());
         calcularValorTotal(itemNota);
-        produtoSalvo.setCustoTotal(itemNota.getValorTotal());
+        //Aqui seto o custo total, mas o que tenho que fazer é pegar o custo total e somar com o valorTotal da nota
+        BigDecimal variavelTeste = produtoSalvo.getCustoTotal().add(itemNota.getValorTotal());
+        produtoSalvo.setCustoTotal(variavelTeste);
         itemNota.setCabecalhoNota(cabecalhoSalvo);
 
         itemNota.setProduto(produtoSalvo);
@@ -114,15 +112,6 @@ public class ItemNotaServiceImpl implements ItemNotaService {
         return BigDecimal.ZERO;
     }
 
-    private CabecalhoNota salvarOuBuscarCabecalho(CabecalhoNota cabecalhoNota) {
-        if (cabecalhoNota.getId() != null) {
-            return cabecalhoNotaRepository.findById(cabecalhoNota.getId()).orElseThrow(() -> new EntidadeNaoEncontradaException(
-                            "Cabeçalho com o ID " + cabecalhoNota.getId() + " não encontrado"));
-        } else {
-            return cabecalhoNotaRepository.save(cabecalhoNota);
-        }
-    }
-
     private void calcularValorTotalProduto(ItemNota itemNota) {
         Produto produto = itemNota.getProduto();
         BigDecimal quantidadeTotal = produto.getQuantidadeEstoque();
@@ -142,5 +131,7 @@ public class ItemNotaServiceImpl implements ItemNotaService {
             produto.setCustoMedio(BigDecimal.ZERO);
         }
     }
+    
+    
 
 }

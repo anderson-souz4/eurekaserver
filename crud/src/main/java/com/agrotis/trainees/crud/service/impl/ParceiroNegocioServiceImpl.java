@@ -75,4 +75,13 @@ public class ParceiroNegocioServiceImpl implements ParceiroNegocioService {
         });
     }
 
+    public ParceiroNegocio salvarOuBuscarFabricante(ParceiroNegocio fabricante) {
+        if (fabricante.getId() != null) {
+            return repository.findById(fabricante.getId()).orElseThrow(() -> new EntidadeNaoEncontradaException(
+                            "Fabricante com o ID " + fabricante.getId() + " não encontrado"));
+        } else {
+            return repository.save(fabricante);
+        }
+    }
+
 }

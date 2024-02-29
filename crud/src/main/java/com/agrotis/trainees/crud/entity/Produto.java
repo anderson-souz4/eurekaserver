@@ -48,7 +48,7 @@ public class Produto{
     @Column(name = "quantidade_estoque", columnDefinition = "INT DEFAULT 0")   
     private BigDecimal quantidadeEstoque;
     
-    private BigDecimal custoTotal;
+    private BigDecimal custoTotal = BigDecimal.ZERO;
     
     private BigDecimal custoMedio;
 

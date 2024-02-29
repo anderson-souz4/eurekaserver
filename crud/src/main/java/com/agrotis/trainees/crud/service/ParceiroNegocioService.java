@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.agrotis.trainees.crud.dtos.ParceiroNegocioDto;
+import com.agrotis.trainees.crud.entity.ParceiroNegocio;
 
 @Service
 public interface ParceiroNegocioService {
@@ -15,6 +16,7 @@ public interface ParceiroNegocioService {
     ParceiroNegocioDto buscarPorNome(String nome);
     void deletarPorId(Integer id);
     ParceiroNegocioDto atualizar(Integer id, ParceiroNegocioDto dto);
+    ParceiroNegocio salvarOuBuscarFabricante(ParceiroNegocio parceiroNegocio);
     
 
 }

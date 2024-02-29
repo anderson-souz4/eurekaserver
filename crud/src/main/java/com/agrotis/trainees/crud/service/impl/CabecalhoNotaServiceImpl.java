@@ -15,6 +15,7 @@ import com.agrotis.trainees.crud.entity.ParceiroNegocio;
 import com.agrotis.trainees.crud.repository.CabecalhoNotaRepository;
 import com.agrotis.trainees.crud.repository.ParceiroNegocioRepository;
 import com.agrotis.trainees.crud.service.CabecalhoNotaService;
+import com.agrotis.trainees.crud.service.ParceiroNegocioService;
 import com.agrotis.trainees.crud.service.exceptions.EntidadeNaoEncontradaException;
 import com.agrotis.trainees.crud.utils.DtoUtils;
 
@@ -25,16 +26,18 @@ public class CabecalhoNotaServiceImpl implements CabecalhoNotaService {
 
     private final CabecalhoNotaRepository repository;
     private final ParceiroNegocioRepository parceiroNegocioRepository;
+    private final ParceiroNegocioService parceiroNegocioService;
 
-    public CabecalhoNotaServiceImpl(CabecalhoNotaRepository repository, ParceiroNegocioRepository parceiroNegocioRepository) {
+    public CabecalhoNotaServiceImpl(ParceiroNegocioService parceiroNegocioService,CabecalhoNotaRepository repository, ParceiroNegocioRepository parceiroNegocioRepository) {
         this.repository = repository;
         this.parceiroNegocioRepository = parceiroNegocioRepository;
+        this.parceiroNegocioService = parceiroNegocioService;
     }
 
     @Override
     public CabecalhoNotaDto salvar(CabecalhoNotaDto cabecalhoDto) {
         CabecalhoNota cabecalho = DtoUtils.converteParaEntidade(cabecalhoDto);
-        ParceiroNegocio fabricanteSalvo = salvarOuBuscarFabricante(cabecalho.getParceiroNegocio());
+        ParceiroNegocio fabricanteSalvo = parceiroNegocioService.salvarOuBuscarFabricante(cabecalho.getParceiroNegocio());
         cabecalho.setParceiroNegocio(fabricanteSalvo);
         BigDecimal valorTotal = calcularValorTotal(cabecalho);
         cabecalho.setValorTotal(valorTotal);
@@ -91,22 +94,22 @@ public class CabecalhoNotaServiceImpl implements CabecalhoNotaService {
         return cabecalho.getItens().stream().map(item -> item.getQuantidade().multiply(item.getPrecoUnitario()))
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
-
-    private ParceiroNegocio salvarOuBuscarFabricante(ParceiroNegocio fabricante) {
-        if (fabricante.getId() != null) {
-            return parceiroNegocioRepository.findById(fabricante.getId()).orElseThrow(() -> new EntidadeNaoEncontradaException(
-                            "Fabricante com o ID " + fabricante.getId() + " não encontrado"));
-        } else {
-            return parceiroNegocioRepository.save(fabricante);
-        }
-    }
-
+    
     public void adicionarValorTotalCabecalho(ItemNota itemNota) {
         CabecalhoNota cabecalhoNota = itemNota.getCabecalhoNota();
         BigDecimal valorTotalCabecalho = cabecalhoNota.getValorTotal();
         BigDecimal valorTotalItem = itemNota.getValorTotal();
         valorTotalCabecalho = valorTotalCabecalho.add(valorTotalItem);
         cabecalhoNota.setValorTotal(valorTotalCabecalho);
+    }
+    
+    public CabecalhoNota salvarOuBuscarCabecalho(CabecalhoNota cabecalhoNota) {
+        if (cabecalhoNota.getId() != null) {
+            return repository.findById(cabecalhoNota.getId()).orElseThrow(() -> new EntidadeNaoEncontradaException(
+                            "Cabeçalho com o ID " + cabecalhoNota.getId() + " não encontrado"));
+        } else {
+            return repository.save(cabecalhoNota);
+        }
     }
 
 }
